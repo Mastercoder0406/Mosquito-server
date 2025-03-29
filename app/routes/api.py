@@ -1,24 +1,22 @@
 from flask import Blueprint, jsonify, request
-from ..extensions import db, limiter
-from ..models import CrowdEvent
+from ..database import CrowdEvent
+from ..schemas import CrowdEventSchema
+from bson import json_util
+import json
 
-api_bp = Blueprint('api', __name__)
+bp = Blueprint('api', __name__)
+schema = CrowdEventSchema()
 
-@api_bp.route('/api/events', methods=['GET'])
-@limiter.limit("100/hour")
-def get_events():
-    events = CrowdEvent.query.order_by(CrowdEvent.timestamp.desc()).limit(100).all()
-    return jsonify([event.to_dict() for event in events])
-
-@api_bp.route('/api/events', methods=['POST'])
-@limiter.limit("100/hour")
+@bp.route('/events', methods=['POST'])
 def create_event():
-    data = request.json
-    event = CrowdEvent(
-        people_count=data['people_count'],
-        location=data['location'],
-        density=data['density']
-    )
-    db.session.add(event)
-    db.session.commit()
-    return jsonify(event.to_dict()), 201
+    try:
+        data = schema.load(request.json)
+        event_id = CrowdEvent.create_event(data)
+        return jsonify({"status": "success", "id": str(event_id.inserted_id)}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@bp.route('/events', methods=['GET'])
+def get_events():
+    events = CrowdEvent.get_recent_events()
+    return json.loads(json_util.dumps(events))

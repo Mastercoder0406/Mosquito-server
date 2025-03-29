@@ -1,23 +1,21 @@
 from flask import Flask
-from .extensions import db, mqtt, limiter
-from .routes.api import api_bp
-from .routes.mqtt import mqtt_bp
+from flask_pymongo import PyMongo
+from flask_mqtt import Mqtt
+from .routes import api, mqtt_routes
 
-def create_app(config_object='config.Config'):
+mongo = PyMongo()
+mqtt = Mqtt()
+
+def create_app():
     app = Flask(__name__)
-    app.config.from_object(config_object)
-
+    app.config.from_object('config.Config')
+    
     # Initialize extensions
-    db.init_app(app)
+    mongo.init_app(app)
     mqtt.init_app(app)
-    limiter.init_app(app)
-
+    
     # Register blueprints
-    app.register_blueprint(api_bp)
-    app.register_blueprint(mqtt_bp)
-
-    # Create database tables
-    with app.app_context():
-        db.create_all()
-
+    app.register_blueprint(api.bp)
+    app.register_blueprint(mqtt_routes.bp)
+    
     return app

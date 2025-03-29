@@ -1,21 +1,21 @@
 from flask import Blueprint
+from flask_mqtt import Mqtt
+from ..database import CrowdEvent
+from ..schemas import CrowdEventSchema
 import json
-from ..extensions import mqtt, db
-from ..models import CrowdEvent
 
-mqtt_bp = Blueprint('mqtt', __name__)
+bp = Blueprint('mqtt', __name__)
+schema = CrowdEventSchema()
 
-@mqtt.on_connect()
-def handle_connect(client, userdata, flags, rc):
+@bp.route('/init_mqtt')
+def init_mqtt():
     mqtt.subscribe('crowd/events')
+    return "MQTT Initialized", 200
 
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
-    data = json.loads(message.payload.decode())
-    event = CrowdEvent(
-        people_count=data['people_count'],
-        location=data['location'],
-        density=data['density']
-    )
-    db.session.add(event)
-    db.session.commit()
+    try:
+        data = schema.load(json.loads(message.payload))
+        CrowdEvent.create_event(data)
+    except Exception as e:
+        print(f"MQTT Error: {str(e)}")

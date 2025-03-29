@@ -1,0 +1,12 @@
+[
+    {
+        "people_count": 15,
+        "location": "Main Entrance",
+        "density": 0.4
+    },
+    {
+        "people_count": 32,
+        "location": "Food Court",
+        "density": 0.7
+    }
+]

@@ -1,7 +1,7 @@
+import os
+
 class Config:
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///crowd_data.db'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MQTT_BROKER_URL = 'localhost'
-    MQTT_BROKER_PORT = 1883
-    MQTT_KEEPALIVE = 60
-    MQTT_TLS_ENABLED = False
+    MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/crowd_monitoring")
+    MQTT_BROKER_URL = os.getenv("MQTT_BROKER_URL", "localhost")
+    MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", 1883))
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
